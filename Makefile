@@ -1,2 +1,2 @@
 all:
-	g++ -I src/include -L src/lib -o visualizer visualizer.cpp -lmingw32 -lSDL2main -lSDL2
+	g++ -I src/include -L src/lib -o engine engine.cpp -lmingw32 -lSDL2main -lSDL2
