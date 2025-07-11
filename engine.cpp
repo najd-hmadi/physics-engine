@@ -2,29 +2,41 @@
 #include <SDL2/SDL.h>
 #define WIDTH 1200
 #define HEIGHT 900
-const double dt = 0.00001;
-const int substeps = 10000;
-class Entity{
-    public:
+const double dt = 0.0001;
+const int substeps = 1000;
+
+struct Vec2{
     double x,y;
-    double vx =0,vy =0;
-    double ax = 0 ,ay;
-    double mass;
-    void step(){
-        x += vx * dt ;
-        y += vy * dt ;
-        vx += ax * dt ;
-        vy += ay * dt;
+    Vec2 operator+( const Vec2 &other) const {
+        return { x + other.x, y + other.y };
+    }
+    Vec2 operator*( const double &scalar ) const{
+        return { x * scalar, y * scalar };
     }
 };
+
+class Entity{
+    public:
+    Vec2 position;
+    Vec2 velocity;
+    Vec2 acceleration ;
+    int m_mass;
+    Vec2 m_p; // momentum
+    void step(){
+        position = position + velocity * dt ;
+        velocity = velocity + acceleration * dt;
+        // m_p = velocity * m_mass; for later to implement elastic collisions
+    }
+};
+
 class Circle : public Entity {
     public:
     float radius;
-    Circle(double ay,double x,double y,float radius){
-        this->ay = ay;
-        this->x = x;
-        this->y = y;
+    Circle(Vec2 &&ac,Vec2 &&pos ,float radius,int mass){
+        this->acceleration = ac;
+        this->position = pos;
         this->radius = radius;
+        this->m_mass = mass;
     }
     
     void draw_circle(SDL_Surface *surface,Uint32 color){
@@ -34,16 +46,16 @@ class Circle : public Entity {
 
             while (x2 <= y2) {
                 // Draw horizontal lines between the left and right edges for each scanline
-                for (int i = x - x2; i <= x + x2; i++) {
-                    SDL_Rect rect = {i, static_cast<int>(y + y2), 1, 1};
+                for (int i = position.x - x2; i <= position.x + x2; i++) {
+                    SDL_Rect rect = {i, static_cast<int>(position.y + y2), 1, 1};
                     SDL_FillRect(surface, &rect, color);
-                    rect.y = y - y2;
+                    rect.y = position.y - y2;
                     SDL_FillRect(surface, &rect, color);
                 }
-                for (int i = x - y2; i <= x + y2; i++) {
-                    SDL_Rect rect = {i, static_cast<int>(y + x2), 1, 1};
+                for (int i = position.x - y2; i <= position.x + y2; i++) {
+                    SDL_Rect rect = {i, static_cast<int>(position.y + x2), 1, 1};
                     SDL_FillRect(surface, &rect, color);
-                    rect.y = y - x2;
+                    rect.y = position.y - x2;
                     SDL_FillRect(surface, &rect, color);
                 }
                 if (d < 0) {
@@ -56,6 +68,13 @@ class Circle : public Entity {
             }
         }
 };
+class ForceGenerator{
+    double ax,ay;
+    public:
+    void accelerate(Entity &object, double  ){
+        
+    }
+};
 class Solver{
     SDL_Window *window = nullptr;
     SDL_Surface *surface = nullptr;
@@ -63,7 +82,7 @@ class Solver{
     Circle c1;
     SDL_Event e;
     public:
-    Solver(): c1(0.98f,300,500,30){};
+    Solver(): c1({0.0, 0.98f},{300,500},30,20){};
     bool init(){
         if(SDL_Init(SDL_INIT_VIDEO) < 0) return false;
         window = SDL_CreateWindow("physics engine",SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,WIDTH,HEIGHT,SDL_WINDOW_SHOWN);
@@ -80,8 +99,8 @@ class Solver{
         return true;
     }
     void out_bounds(Circle &circle){
-        if((circle.y + circle.radius > HEIGHT ) || ( circle.y - circle.radius < 0 ) ) circle.vy *= -0.6 ;
-        if((circle.x + circle.radius > WIDTH ) || ( circle.x - circle.radius < 0 ) ) circle.vx *= -0.6 ;
+        if((circle.position.y + circle.radius > HEIGHT ) || ( circle.position.y - circle.radius < 0 ) ) circle.velocity.y *= -0.6 ;
+            if((circle.position.x + circle.radius > WIDTH ) || ( circle.position.x - circle.radius < 0 ) ) circle.velocity.x *= -0.6 ;
 
     }
     void run(){
