@@ -1,19 +1,21 @@
 #include <iostream>
 #include <SDL2/SDL.h>
 #include <cmath>
-#define WIDTH 1200
-#define HEIGHT 900
-const double dt = 0.0001;
-const int substeps = 1000;
+constexpr int WIDTH = 1200;
+constexpr int HEIGHT = 900;
+constexpr double dt = 0.00001;
+constexpr int substeps = 1000;
 
 struct Vec2{
     double x,y;
     void normalize(){
         float l = sqrt(x * x + y * y);
-        std::cout << l << "****";
-        // if(l = 0) return ;
-        x = x / l;
-        y = y / l;
+        
+        if(l != 0){
+            x = x / l;
+            y = y / l;
+        }
+        
     }
     Vec2 operator+( const Vec2 &other) const {
         return { x + other.x, y + other.y };
@@ -34,8 +36,9 @@ class Entity{
     int m_mass;
     Vec2 m_p; // momentum
     void step(){
-        position = position + velocity * dt ;
+        // explicit euler integration (will implement RK4 later im too lazy to do it now)
         velocity = velocity + acceleration * dt;
+        position = position + velocity * dt ;
         // m_p = velocity * m_mass; for later to implement elastic collisions
     }
 };
@@ -153,7 +156,7 @@ class Solver{
     Spring s1;
     SDL_Event e;
     public:
-    Solver(): c1({0.0, 0.98f},{300,500},30,20) {};
+    Solver(): c1({0.0, 0.98f},{300,500},30,1) {};
     bool init(){
         if(SDL_Init(SDL_INIT_VIDEO) < 0) return false;
         window = SDL_CreateWindow("physics engine",SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,WIDTH,HEIGHT,SDL_WINDOW_SHOWN);
@@ -167,7 +170,7 @@ class Solver{
             return false;
         }
         is_running = true;
-        s1 = Spring({300,10},c1.position,200,10);
+            s1 = Spring({300,10},c1.position,400,10);
         return true;
     }
     void out_bounds(Circle &circle){
@@ -182,22 +185,25 @@ class Solver{
                     is_running = false;
                 }
             }
-
             
+            s1.update(c1);
+            // make a unit vector pointing from the anchor of the spring to the circle
+            Vec2 v = s1.position - s1.anchor;
+            v.normalize();
+            // calculate the acceleration caused by the spring and add it to the circle's acceleration (i do not know why but when the circle has another acceleration vector the simulation goes nuts, probably because of euler integration)
+            c1.acceleration =   v * (( -s1.k * s1.x ) / (1/c1.m_mass));
             c1.draw_circle(surface,0x000000);
-            s1.draw_circle(surface,0x000000);
+
             for(int i = 0; i < substeps; i++){
                 c1.step();
                 out_bounds(c1);
             }          
+            s1.draw_circle(surface,0xffffff);
             c1.draw_circle(surface,0xffffff);
             SDL_UpdateWindowSurface(window);
             
-            s1.update(c1);
-            Vec2 v = s1.position - s1.anchor;
-            v.normalize();
-            c1.acceleration = c1.acceleration + ( v * -s1.k ) ;
-            std::cout << c1.acceleration.y << "////" << ( v * -s1.k ).x << "//////" << ( v * -s1.k ).y << '\n';
+            
+            // SDL_Delay(1000);
         }
     }
     ~Solver(){
