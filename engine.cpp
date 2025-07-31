@@ -35,11 +35,20 @@ class Entity{
     Vec2 acceleration ;
     int m_mass;
     Vec2 m_p; // momentum
+    // takes new acceleration calculated in runtime
     void step(){
-        // explicit euler integration (will implement RK4 later im too lazy to do it now)
-        velocity = velocity + acceleration * dt;
-        position = position + velocity * dt ;
-        // m_p = velocity * m_mass; for later to implement elastic collisions
+        Vec2 k1x,k2x,k3x,k4x,k1v,k2v,k3v,k4v;
+        k1x = velocity;
+        k1v = acceleration;
+        k2x = velocity + k1x * 0.5 * dt;
+        k2v = acceleration + k1v * 0.5 * dt;
+        k3x = velocity + k2x * 0.5 * dt;
+        k3v = acceleration + k2v * 0.5 * dt;
+        k4x = velocity + k3x * 0.5 * dt;
+        k4v = acceleration + k3v * 0.5 * dt;
+
+        position = position + (k1x + k2x * 2 + k3x * 2 + k4x )* dt * 0.166;
+        velocity = velocity + (k1v + k2v * 2 + k3v * 2 + k4v )* dt * 0.166;
     }
 };
 
@@ -156,7 +165,7 @@ class Solver{
     Spring s1;
     SDL_Event e;
     public:
-    Solver(): c1({0.0, 0.98f},{300,500},30,1) {};
+    Solver(): c1({0.0, 0.98f},{200,500},30,1) {};
     bool init(){
         if(SDL_Init(SDL_INIT_VIDEO) < 0) return false;
         window = SDL_CreateWindow("physics engine",SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,WIDTH,HEIGHT,SDL_WINDOW_SHOWN);
@@ -186,17 +195,19 @@ class Solver{
                 }
             }
             
-            s1.update(c1);
+            
             // make a unit vector pointing from the anchor of the spring to the circle
             Vec2 v = s1.position - s1.anchor;
             v.normalize();
             // calculate the acceleration caused by the spring and add it to the circle's acceleration (i do not know why but when the circle has another acceleration vector the simulation goes nuts, probably because of euler integration)
-            c1.acceleration =   v * (( -s1.k * s1.x ) / (1/c1.m_mass));
+            
             c1.draw_circle(surface,0x000000);
 
             for(int i = 0; i < substeps; i++){
+                c1.acceleration =  (Vec2){0.0, 0.98f} + v * (( -s1.k * s1.x ));
                 c1.step();
                 out_bounds(c1);
+                s1.update(c1);
             }          
             s1.draw_circle(surface,0xffffff);
             c1.draw_circle(surface,0xffffff);
