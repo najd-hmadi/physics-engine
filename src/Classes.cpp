@@ -18,8 +18,9 @@ void Entity::step(){
 
 
 
-Circle::Circle(Vec2 &&ac,Vec2 &&pos ,float radius,int mass){
+Circle::Circle(Vec2 &&vc,Vec2 &&ac,Vec2 &&pos ,float radius,int mass){
         this->acceleration = ac;
+        this->velocity = vc;
         this->position = pos;
         this->radius = radius;
         this->m_mass = mass;

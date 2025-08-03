@@ -15,7 +15,7 @@ class Entity{
 class Circle : public Entity {
     public:
     float radius;
-    Circle(Vec2 &&ac,Vec2 &&pos ,float radius,int mass);
+    Circle(Vec2 &&vc,Vec2 &&ac,Vec2 &&pos ,float radius,int mass);
     
     void draw_circle(SDL_Surface *surface,Uint32 color);
 };

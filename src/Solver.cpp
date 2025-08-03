@@ -15,9 +15,9 @@ bool Solver::init(){
         is_running = true;
         return true;
     }
-void Solver::out_bounds(Circle &circle){
+void Solver::collision(Circle &circle){
         if((circle.position.y + circle.radius > HEIGHT ) || ( circle.position.y - circle.radius < 0 ) ) circle.velocity.y *= BOUNCE_DAMPING ;
-            if((circle.position.x + circle.radius > WIDTH ) || ( circle.position.x - circle.radius < 0 ) ) circle.velocity.x *= BOUNCE_DAMPING ;
+        if((circle.position.x + circle.radius > WIDTH ) || ( circle.position.x - circle.radius < 0 ) ) circle.velocity.x *= BOUNCE_DAMPING ;
 
     }
 void Solver::run(){
@@ -30,20 +30,20 @@ void Solver::run(){
             
             
             // make a unit vector pointing from the anchor of the spring to the circle
-            Vec2 v = s1.attached_pos - s1.anchor;
-            v.normalize();
+            // Vec2 v = s1.attached_pos - s1.anchor;
+            // v.normalize();
             // calculate the acceleration caused by the spring and add it to the circle's acceleration (i do not know why but when the circle has another acceleration vector the simulation goes nuts, probably because of euler integration)
             
             c1.draw_circle(surface,0x000000);
 
             for(int i = 0; i < substeps; i++){
                 // calculating the sum of all the acceleration vectors on the circle c1
-                c1.acceleration =  (Vec2){0.0, gravity} + v * (( -s1.k * s1.x ) * 1/c1.m_mass );
+                c1.acceleration =  (Vec2){0.0, gravity} ;
                 c1.step();
-                out_bounds(c1);
-                s1.update(c1);
+                collision(c1);
+                // s1.update(c1);
             }          
-            s1.draw_circle(surface,0xffffff);
+            // s1.draw_circle(surface,0xffffff);
             c1.draw_circle(surface,0xffffff);
             SDL_UpdateWindowSurface(window);
             
