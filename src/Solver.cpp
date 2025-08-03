@@ -16,8 +16,8 @@ bool Solver::init(){
         return true;
     }
 void Solver::collision(Circle &circle){
-        if((circle.position.y + circle.radius > HEIGHT ) || ( circle.position.y - circle.radius < 0 ) ) circle.velocity.y *= BOUNCE_DAMPING ;
-        if((circle.position.x + circle.radius > WIDTH ) || ( circle.position.x - circle.radius < 0 ) ) circle.velocity.x *= BOUNCE_DAMPING ;
+        if((circle.m_position.y + circle.m_radius > HEIGHT ) || ( circle.m_position.y - circle.m_radius < 0 ) ) circle.m_velocity.y *= BOUNCE_DAMPING ;
+        if((circle.m_position.x + circle.m_radius > WIDTH ) || ( circle.m_position.x - circle.m_radius < 0 ) ) circle.m_velocity.x *= BOUNCE_DAMPING ;
 
     }
 void Solver::run(){
@@ -38,7 +38,7 @@ void Solver::run(){
 
             for(int i = 0; i < substeps; i++){
                 // calculating the sum of all the acceleration vectors on the circle c1
-                c1.acceleration =  (Vec2){0.0, gravity} ;
+                c1.m_acceleration =  (Vec2){0.0, gravity} ;
                 c1.step();
                 collision(c1);
                 // s1.update(c1);

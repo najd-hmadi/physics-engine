@@ -2,46 +2,46 @@
 
 void Entity::step(){
     Vec2 k1x,k2x,k3x,k4x,k1v,k2v,k3v,k4v;
-    k1x = velocity;
-    k1v = acceleration;
-    k2x = velocity + k1x * 0.5 * dt;
-    k2v = acceleration + k1v * 0.5 * dt;
-    k3x = velocity + k2x * 0.5 * dt;
-    k3v = acceleration + k2v * 0.5 * dt;
-    k4x = velocity + k3x * 0.5 * dt;
-    k4v = acceleration + k3v * 0.5 * dt;
+    k1x = m_velocity;
+    k1v = m_acceleration;
+    k2x = m_velocity + k1x * 0.5 * dt;
+    k2v = m_acceleration + k1v * 0.5 * dt;
+    k3x = m_velocity + k2x * 0.5 * dt;
+    k3v = m_acceleration + k2v * 0.5 * dt;
+    k4x = m_velocity + k3x * 0.5 * dt;
+    k4v = m_acceleration + k3v * 0.5 * dt;
 
-    position = position + (k1x + k2x * 2 + k3x * 2 + k4x )* dt * 0.166;
-    velocity = velocity + (k1v + k2v * 2 + k3v * 2 + k4v )* dt * 0.166;
+    m_position = m_position + (k1x + k2x * 2 + k3x * 2 + k4x )* dt * 0.166;
+    m_velocity = m_velocity + (k1v + k2v * 2 + k3v * 2 + k4v )* dt * 0.166;
 }
 
 
 
 
-Circle::Circle(Vec2 &&vc,Vec2 &&ac,Vec2 &&pos ,float radius,int mass){
-        this->acceleration = ac;
-        this->velocity = vc;
-        this->position = pos;
-        this->radius = radius;
+Circle::Circle(const Vec2 &vc,const Vec2 &ac,const Vec2 &pos ,double radius,int mass){
+        this->m_acceleration = ac;
+        this->m_velocity = vc;
+        this->m_position = pos;
+        this->m_radius = radius;
         this->m_mass = mass;
     }
 void Circle::draw_circle(SDL_Surface *surface,Uint32 color){
             int x2 = 0;
-            int y2 = radius;
-            int d = 1 - radius;
+            int y2 = m_radius;
+            int d = 1 - m_radius;
 
             while (x2 <= y2) {
                 // Draw horizontal lines between the left and right edges for each scanline
-                for (int i = position.x - x2; i <= position.x + x2; i++) {
-                    SDL_Rect rect = {i, static_cast<int>(position.y + y2), 1, 1};
+                for (int i = m_position.x - x2; i <= m_position.x + x2; i++) {
+                    SDL_Rect rect = {i, static_cast<int>(m_position.y + y2), 1, 1};
                     SDL_FillRect(surface, &rect, color);
-                    rect.y = position.y - y2;
+                    rect.y = m_position.y - y2;
                     SDL_FillRect(surface, &rect, color);
                 }
-                for (int i = position.x - y2; i <= position.x + y2; i++) {
-                    SDL_Rect rect = {i, static_cast<int>(position.y + x2), 1, 1};
+                for (int i = m_position.x - y2; i <= m_position.x + y2; i++) {
+                    SDL_Rect rect = {i, static_cast<int>(m_position.y + x2), 1, 1};
                     SDL_FillRect(surface, &rect, color);
-                    rect.y = position.y - x2;
+                    rect.y = m_position.y - x2;
                     SDL_FillRect(surface, &rect, color);
                 }
                 if (d < 0) {
@@ -54,34 +54,34 @@ void Circle::draw_circle(SDL_Surface *surface,Uint32 color){
             }
     }
 
-Spring::Spring(Vec2 &&anch, const Vec2 &ball,float rest, float radius){
-        this->rest_length = rest;
-        this->anchor = anch;
-        this->attached_pos = ball;
-        this->radius = radius;
-        this->x = sqrt((attached_pos.x - anchor.x) * (attached_pos.x - anchor.x) + (attached_pos.y - anchor.y) * (attached_pos.y - anchor.y)) - rest_length;
+Spring::Spring(Vec2 &&anch, const Vec2 &ball,double rest, double radius){
+        this->m_rest_length = rest;
+        this->m_anchor = anch;
+        this->m_attached_pos = ball;
+        this->m_radius = radius;
+        this->m_x = sqrt((m_attached_pos.x - m_anchor.x) * (m_attached_pos.x - m_anchor.x) + (m_attached_pos.y - m_anchor.y) * (m_attached_pos.y - m_anchor.y)) - m_rest_length;
 }
 void Spring::update(Circle c){
-        this->attached_pos = c.position;
-        this->x = sqrt((attached_pos.x - anchor.x) * (attached_pos.x - anchor.x) + (attached_pos.y - anchor.y) * (attached_pos.y - anchor.y)) - rest_length;
+        this->m_attached_pos = c.m_position;
+        this->m_x = sqrt((m_attached_pos.x - m_anchor.x) * (m_attached_pos.x - m_anchor.x) + (m_attached_pos.y - m_anchor.y) * (m_attached_pos.y - m_anchor.y)) - m_rest_length;
     }
 void Spring::draw_circle(SDL_Surface *surface,Uint32 color){
             int x2 = 0;
-            int y2 = radius;
-            int d = 1 - radius;
+            int y2 = m_radius;
+            int d = 1 - m_radius;
 
             while (x2 <= y2) {
                 // Draw horizontal lines between the left and right edges for each scanline
-                for (int i = anchor.x - x2; i <= anchor.x + x2; i++) {
-                    SDL_Rect rect = {i, static_cast<int>(anchor.y + y2), 1, 1};
+                for (int i = m_anchor.x - x2; i <= m_anchor.x + x2; i++) {
+                    SDL_Rect rect = {i, static_cast<int>(m_anchor.y + y2), 1, 1};
                     SDL_FillRect(surface, &rect, color);
-                    rect.y = anchor.y - y2;
+                    rect.y = m_anchor.y - y2;
                     SDL_FillRect(surface, &rect, color);
                 }
-                for (int i = anchor.x - y2; i <= anchor.x + y2; i++) {
-                    SDL_Rect rect = {i, static_cast<int>(anchor.y + x2), 1, 1};
+                for (int i = m_anchor.x - y2; i <= m_anchor.x + y2; i++) {
+                    SDL_Rect rect = {i, static_cast<int>(m_anchor.y + x2), 1, 1};
                     SDL_FillRect(surface, &rect, color);
-                    rect.y = anchor.y - x2;
+                    rect.y = m_anchor.y - x2;
                     SDL_FillRect(surface, &rect, color);
                 }
                 if (d < 0) {
@@ -93,3 +93,4 @@ void Spring::draw_circle(SDL_Surface *surface,Uint32 color){
                 x2++;
             }
     }
+    
