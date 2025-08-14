@@ -1,7 +1,7 @@
 #pragma once
 #include "Vec2.hpp"
 #include <SDL2/SDL.h>
-constexpr double dt = 0.0001;
+constexpr double dt = 0.001;
 
 
 class Entity{
@@ -9,7 +9,7 @@ class Entity{
     Vec2 m_position;
     Vec2 m_velocity;
     Vec2 m_acceleration ;
-    int m_mass;
+    double m_mass;
     Vec2 m_p; // momentum
     // takes new acceleration calculated in runtime
     void step();

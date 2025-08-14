@@ -15,9 +15,17 @@ bool Solver::init(){
         is_running = true;
         return true;
     }
-void Solver::collision(Circle &circle){
+void Solver::collision(Circle &circle,Circle &c2){
         if((circle.m_position.y + circle.m_radius > HEIGHT ) || ( circle.m_position.y - circle.m_radius < 0 ) ) circle.m_velocity.y *= BOUNCE_DAMPING ;
         if((circle.m_position.x + circle.m_radius > WIDTH ) || ( circle.m_position.x - circle.m_radius < 0 ) ) circle.m_velocity.x *= BOUNCE_DAMPING ;
+        if((c2.m_position.y + c2.m_radius > HEIGHT ) || ( c2.m_position.y - c2.m_radius < 0 ) ) c2.m_velocity.y *= BOUNCE_DAMPING ;
+        if((c2.m_position.x + c2.m_radius > WIDTH ) || ( c2.m_position.x - c2.m_radius < 0 ) ) c2.m_velocity.x *= BOUNCE_DAMPING ;
+        if(sqrt((circle.m_position.x - c2.m_position.x) * (circle.m_position.x - c2.m_position.x) + (circle.m_position.y - c2.m_position.y) * (circle.m_position.y - c2.m_position.y)) < circle.m_radius + c2.m_radius ){
+            Vec2 temp(c2.m_velocity);
+            c2.m_velocity = (circle.m_velocity * 2 * circle.m_mass + c2.m_velocity * (c2.m_mass - circle.m_mass) ) * (1 / (circle.m_mass + c2.m_mass));
+            circle.m_velocity = temp - circle.m_velocity + c2.m_velocity;
+            std::cout << (1.0 / 2.0 * circle.m_mass * ( circle.m_velocity.hyp() * circle.m_velocity.hyp()) +  1.0 / 2.0 * c2.m_mass * ( c2.m_velocity.hyp() * c2.m_velocity.hyp())) << '\n' ;
+        }
 
     }
 void Solver::run(){
@@ -29,21 +37,15 @@ void Solver::run(){
             }
             
             
-            // make a unit vector pointing from the anchor of the spring to the circle
-            // Vec2 v = s1.attached_pos - s1.anchor;
-            // v.normalize();
-            // calculate the acceleration caused by the spring and add it to the circle's acceleration (i do not know why but when the circle has another acceleration vector the simulation goes nuts, probably because of euler integration)
             
             c1.draw_circle(surface,0x000000);
-
+            c2.draw_circle(surface,0x000000);
             for(int i = 0; i < substeps; i++){
-                // calculating the sum of all the acceleration vectors on the circle c1
-                c1.m_acceleration =  (Vec2){0.0, gravity} ;
                 c1.step();
-                collision(c1);
-                // s1.update(c1);
+                c2.step();
+                collision(c1,c2);
             }          
-            // s1.draw_circle(surface,0xffffff);
+            c2.draw_circle(surface,0xffffff);
             c1.draw_circle(surface,0xffffff);
             SDL_UpdateWindowSurface(window);
             
