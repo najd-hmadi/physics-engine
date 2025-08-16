@@ -1,11 +1,14 @@
 #pragma once
 #include "Vec2.hpp"
 #include <SDL2/SDL.h>
+#include <iostream>
+#include "SceneObject.hpp"
 constexpr double dt = 0.001;
 
 
 class Entity{
     public:
+    Vec2 force;
     Vec2 m_position;
     Vec2 m_velocity;
     Vec2 m_acceleration ;
@@ -13,25 +16,29 @@ class Entity{
     Vec2 m_p; // momentum
     // takes new acceleration calculated in runtime
     void step();
+    void add_force(const Vec2 &other);
 };
-class Circle : public Entity {
+class Circle : public Entity, public SceneObject {
     public:
     double m_radius;
-    Circle(const Vec2 &vc,const Vec2 &ac,const Vec2 &pos ,double radius,int mass);
+    Circle() = default;
+    Circle(const Vec2 &pos ,const Vec2 &vc,const Vec2 &ac,double radius,int mass);
     
-    void draw_circle(SDL_Surface *surface,Uint32 color);
+    void render(SDL_Surface *surface,Uint32 color) const override;
 };
 
-class Spring {
+class Spring : public SceneObject {
 
     public:
+    Circle *m_attached_circle;
     Vec2 m_anchor;
-    Vec2 m_attached_pos;
-    double m_k = 0.45;
+    Vec2 m_last_v;
+    double m_k = 0.25;
     double m_rest_length;
     double m_x;
     int m_radius;
-    void draw_circle(SDL_Surface *surface,Uint32 color);
-    Spring(Vec2 &&anch, const Vec2 &ball,double rest, double radius);
-    void update(Circle c);
+    void render(SDL_Surface *surface,Uint32 color) const override;
+    Spring() = default;
+    Spring(Vec2 &&anch,Circle *c ,double rest, double radius);
+    void update();
 };

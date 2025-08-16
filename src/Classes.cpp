@@ -15,17 +15,21 @@ void Entity::step(){
     m_velocity = m_velocity + (k1v + k2v * 2 + k3v * 2 + k4v )* dt * 0.166;
 }
 
+void Entity::add_force(const Vec2 &other){
+    force = force + other;
+    m_acceleration = force * (1/m_mass);
+}
 
 
-
-Circle::Circle(const Vec2 &vc,const Vec2 &ac,const Vec2 &pos ,double radius,int mass){
+Circle::Circle(const Vec2 &pos ,const Vec2 &vc,const Vec2 &ac,double radius,int mass){
         this->m_acceleration = ac;
         this->m_velocity = vc;
         this->m_position = pos;
         this->m_radius = radius;
         this->m_mass = mass;
+        this->force = m_acceleration * m_mass;
     }
-void Circle::draw_circle(SDL_Surface *surface,Uint32 color){
+void Circle::render(SDL_Surface *surface,Uint32 color) const {
             int x2 = 0;
             int y2 = m_radius;
             int d = 1 - m_radius;
@@ -54,18 +58,20 @@ void Circle::draw_circle(SDL_Surface *surface,Uint32 color){
             }
     }
 
-Spring::Spring(Vec2 &&anch, const Vec2 &ball,double rest, double radius){
-        this->m_rest_length = rest;
-        this->m_anchor = anch;
-        this->m_attached_pos = ball;
-        this->m_radius = radius;
-        this->m_x = sqrt((m_attached_pos.x - m_anchor.x) * (m_attached_pos.x - m_anchor.x) + (m_attached_pos.y - m_anchor.y) * (m_attached_pos.y - m_anchor.y)) - m_rest_length;
+
+Spring::Spring(Vec2 &&anch, Circle *c ,double rest, double radius) : m_anchor(anch),m_attached_circle(c),m_rest_length(rest), m_radius(radius) {
+        this->m_x = sqrt((m_attached_circle->m_position.x - m_anchor.x) * (m_attached_circle->m_position.x - m_anchor.x) + (m_attached_circle->m_position.y - m_anchor.y) * (m_attached_circle->m_position.y - m_anchor.y)) - m_rest_length;
 }
-void Spring::update(Circle c){
-        this->m_attached_pos = c.m_position;
-        this->m_x = sqrt((m_attached_pos.x - m_anchor.x) * (m_attached_pos.x - m_anchor.x) + (m_attached_pos.y - m_anchor.y) * (m_attached_pos.y - m_anchor.y)) - m_rest_length;
+void Spring::update(){
+        // this->m_attached_circle->m_position = c.m_position;
+        this->m_x = sqrt((m_attached_circle->m_position.x - m_anchor.x) * (m_attached_circle->m_position.x - m_anchor.x) + (m_attached_circle->m_position.y - m_anchor.y) * (m_attached_circle->m_position.y - m_anchor.y)) - m_rest_length;
+        Vec2 v = (m_attached_circle->m_position - m_anchor);
+        v.normalize();
+        v = v * (-m_k * m_x);
+        this->m_attached_circle->add_force(v - m_last_v );
+        this->m_last_v = v;
     }
-void Spring::draw_circle(SDL_Surface *surface,Uint32 color){
+void Spring::render(SDL_Surface *surface,Uint32 color) const  {
             int x2 = 0;
             int y2 = m_radius;
             int d = 1 - m_radius;
